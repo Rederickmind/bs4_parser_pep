@@ -1,5 +1,6 @@
 import inspect
 from pathlib import Path
+
 try:
     from src import constants
 except ModuleNotFoundError:

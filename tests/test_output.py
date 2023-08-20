@@ -1,8 +1,10 @@
-from datetime import datetime
-from typing import Optional
-from pathlib import Path
-import pytest
 from argparse import Namespace
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+import pytest
+
 try:
     from src import outputs
 except ModuleNotFoundError:

@@ -1,12 +1,10 @@
 import argparse
 import logging
-# хендлер с ротацией логов.
 from logging.handlers import RotatingFileHandler
 
 from constants import BASE_DIR
 
 LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
-# Указываем формат времени.
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
 
 
@@ -24,7 +22,7 @@ def configure_argument_parser(available_modes):
         action='store_true',
         help='Очистка кеша'
     )
-    # Новый аргумент --output вместо аргумента --pretty
+    # Аргумент для выбора способа вывода.
     parser.add_argument(
         '-o',
         '--output',

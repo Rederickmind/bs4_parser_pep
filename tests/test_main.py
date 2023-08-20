@@ -1,5 +1,7 @@
-import pytest
 from pathlib import Path
+
+import pytest
+
 try:
     from src import main
 except ModuleNotFoundError:

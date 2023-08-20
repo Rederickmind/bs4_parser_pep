@@ -1,5 +1,7 @@
-import pytest
 import argparse
+
+import pytest
+
 try:
     from src import configs
 except ModuleNotFoundError:

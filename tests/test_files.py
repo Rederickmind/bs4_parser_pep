@@ -1,6 +1,6 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 BASE_DIR = Path(__name__).absolute().parent
 MAIN_DIR = BASE_DIR / 'src'

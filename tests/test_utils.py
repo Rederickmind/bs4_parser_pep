@@ -1,8 +1,9 @@
+import bs4
 import pytest
 import requests
 import requests_mock
-import bs4
 from conftest import MAIN_DOC_URL
+
 try:
     from src import utils
 except ModuleNotFoundError:

@@ -1,4 +1,3 @@
-# exceptions.py
 UNEXPECTED_STATUS = (
     '\n Несовпадающие статусы: '
     '\n {pep_card_link} '
