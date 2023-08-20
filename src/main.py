@@ -7,9 +7,10 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, EXPECTED_STATUS
+from constants import BASE_DIR, MAIN_DOC_URL, EXPECTED_STATUS, MAIN_PEP_URL
 from outputs import control_output
 from utils import find_tag, get_response
+from exceptions import UNEXPECTED_STATUS, ParserFindTagException
 
 
 def whats_new(session):
@@ -25,6 +26,8 @@ def whats_new(session):
     # Шаг 1-й: поиск в "супе" тега section с нужным id. Парсеру нужен только
     # первый элемент, поэтому используется метод find().
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
+    if not main_div:
+        raise ParserFindTagException('Ничего не нашлось')
 
     # Шаг 2-й: поиск внутри main_div следующего
     # тега div с классом toctree-wrapper.
@@ -39,24 +42,19 @@ def whats_new(session):
         attrs={'class': 'toctree-l1'}
     )
 
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
     for section in tqdm(sections_by_python):
         version_a_tag = section.find('a')
-        # Вставьте этот код в конце цикла вместо строчки print(version_a_tag).
         href = version_a_tag['href']
         version_link = urljoin(whats_new_url, href)
-        # print(version_link)
-        # session = requests_cache.CachedSession()
+
         response = get_response(session, version_link)
         if response is None:
-            # Если страница не загрузится,
-            # программа перейдёт к следующей ссылке.
             continue
         soup = BeautifulSoup(response.text, features='lxml')
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
-        # print(version_link, h1.text, dl_text)
         results.append(
             (version_link, h1.text, dl_text)
         )
@@ -84,7 +82,7 @@ def latest_versions(session):
         # Если нужный список не нашёлся,
         # вызывается исключение и выполнение программы прерывается.
         else:
-            raise Exception('Ничего не нашлось')
+            raise ParserFindTagException('Ничего не нашлось')
     # print(a_tags)
 
     results = [('Ссылка на документацию', 'Версия', 'Статус')]
@@ -140,14 +138,58 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def pep():
-    pass
+def pep(session):
+    response = get_response(session, MAIN_PEP_URL)
+    soup = BeautifulSoup(response.text, 'lxml')
+    main_tag = find_tag(soup, 'section', {'id': 'numerical-index'})
+    pep_list = find_tag(main_tag, 'tbody')
+    pep_rows = pep_list.find_all('tr')
+    if not pep_rows:
+        raise ParserFindTagException('Ничего не нашлось')
+
+    all_pep_count = 0
+    logs = []
+    temp_results = {}
+    results = [('Статус', 'Количество')]
+    for pep_row in tqdm(pep_rows):
+        list_status = find_tag(pep_row, 'abbr')
+        preview_status = list_status.text[1:]
+        expected_status = EXPECTED_STATUS[preview_status]
+
+        pep_card_link = find_tag(pep_row, 'a')
+        pep_href = pep_card_link['href']
+        pep_card_link = urljoin(MAIN_PEP_URL, pep_href)
+
+        response = get_response(session, pep_card_link)
+        soup = BeautifulSoup(response.text, 'lxml')
+        card_abbr = find_tag(soup, 'abbr')
+        pep_card_status = card_abbr.text
+
+        if pep_card_status not in expected_status:
+            logs.append(
+                UNEXPECTED_STATUS.format(
+                 pep_card_link=pep_card_link,
+                 pep_card_status=pep_card_status,
+                 expected_status=expected_status
+                )
+            )
+
+        if pep_card_status in temp_results:
+            temp_results[pep_card_status] += 1
+        else:
+            temp_results[pep_card_status] = 1
+        all_pep_count += 1
+    list(map(logging.warning, logs))
+    temp_results['Total'] = all_pep_count
+    results += list(temp_results.items())
+    return results
 
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
+    'pep': pep,
 }
 
 
