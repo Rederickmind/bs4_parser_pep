@@ -15,6 +15,8 @@ git@github.com:Rederickmind/bs4_parser_pep.git
 **Установите и активируйте виртуальное окружение:**
 ```
 python -m venv venv
+```
+```
 source venv/Scripts/activate
 ```
 **Обновите менеджер pip и установите зависимости**
