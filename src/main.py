@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 import re
 from urllib.parse import urljoin
@@ -115,9 +116,9 @@ def pep(session):
     if not pep_rows:
         raise ParserFindTagException('Ничего не нашлось')
 
-    all_pep_count = 0
+    # all_pep_count = 0
     logs = []
-    temp_results = {}
+    temp_results = defaultdict(int)
     results = [('Статус', 'Количество')]
     for pep_row in tqdm(pep_rows):
         list_status = find_tag(pep_row, 'abbr')
@@ -125,7 +126,7 @@ def pep(session):
         expected_status = EXPECTED_STATUS[preview_status]
 
         pep_card_link = find_tag(pep_row, 'a')
-        pep_href = pep_card_link['href']
+        pep_href = pep_card_link['href'] + '/'
         pep_card_link = urljoin(MAIN_PEP_URL, pep_href)
 
         response = get_response(session, pep_card_link)
@@ -142,13 +143,10 @@ def pep(session):
                 )
             )
 
-        if pep_card_status in temp_results:
-            temp_results[pep_card_status] += 1
-        else:
-            temp_results[pep_card_status] = 1
-        all_pep_count += 1
+        temp_results[pep_card_status] += 1
+        # all_pep_count += 1
     list(map(logging.warning, logs))
-    temp_results['Total'] = all_pep_count
+    temp_results['Total'] = sum(temp_results.values())
     results += list(temp_results.items())
     return results
 
