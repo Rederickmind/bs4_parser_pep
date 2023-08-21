@@ -20,8 +20,10 @@ python -m venv venv
 source venv/Scripts/activate
 ```
 **Обновите менеджер pip и установите зависимости**
+```
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
 
 **Для запуска парсера перейдите в папку "src":**
 ```
